@@ -92,7 +92,7 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
 {
     NSInteger numberOfPages = 0;
     if (self.dataSource)
-        numberOfPages = [self.dataSource pageCoverFlowView:self numberOfPagesInSection:0];
+        numberOfPages = [self.dataSource coverFlowPagesView:self numberOfPagesInSection:0];
     CGRect viewBounds = self.bounds;
     _pageWidth = viewBounds.size.width / 2;
     _pageHeight = viewBounds.size.height * 2 / 3;
@@ -103,7 +103,7 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
 
 - (CGRect)frameOfPageViewAtIndexPath:(NSIndexPath *)indexpath;
 {
-    float x = indexpath.item * _pageWidth + _pageWidth / 2;
+    float x = indexpath.row * _pageWidth + _pageWidth / 2;
     float y = kPageViewTopMargin;
     return CGRectMake(x, y, _pageWidth, _pageHeight);
 }
@@ -111,7 +111,7 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
 - (NSIndexPath *)indexPathOfFrame:(CGRect)frame;
 {
     NSInteger index = floorf((CGRectGetMidX(frame) - _pageWidth / 2) / _pageWidth);
-    return [NSIndexPath indexPathForItem:index inSection:0];
+    return [NSIndexPath indexPathForRow:index inSection:0];
 }
 
 - (BOOL)isPageViewOnScreen:(QLPageView *)pageView;
@@ -126,12 +126,14 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     NSArray *pageViews = [_containerView subviews];
     for (QLPageView *pageView in pageViews) {
         if (![self isPageViewOnScreen:pageView]) {
-            NSMutableArray *array = [_reusableViewStorages objectForKey:pageView.reuseIdentifier];
-            if (!array) {
-                array = [NSMutableArray array];
-                [_reusableViewStorages setObject:array forKey:pageView.reuseIdentifier];
+            if (pageView.reuseIdentifier) {
+                NSMutableArray *array = [_reusableViewStorages objectForKey:pageView.reuseIdentifier];
+                if (!array) {
+                    array = [NSMutableArray array];
+                    [_reusableViewStorages setObject:array forKey:pageView.reuseIdentifier];
+                }
+                [array addObject:pageView];                
             }
-            [array addObject:pageView];
             [pageView removeFromSuperview];
         }
     }
@@ -150,19 +152,19 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     // initialize new page views
     NSInteger numberOfPages = 0;
     if (self.dataSource)
-        numberOfPages = [self.dataSource pageCoverFlowView:self numberOfPagesInSection:0];
+        numberOfPages = [self.dataSource coverFlowPagesView:self numberOfPagesInSection:0];
     
     UIView *currentView = nil;
     UIView *leftview = nil;
     UIView *rightView = nil;
     
     for (int i = 0; i < numberOfPages; i++) {
-        NSIndexPath *indexPath = [NSIndexPath indexPathForItem:i inSection:0];
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
         if ([usedIndexPaths containsObject:indexPath])
             continue;
         CGRect pageFrame = [self frameOfPageViewAtIndexPath:indexPath];
         if (CGRectIntersectsRect([self convertRect:pageFrame fromView:_containerView], self.scrollView.frame)) {
-            UIView *pageView = [self.dataSource pageCoverFlowView:self viewForPageAtIndexPath:indexPath];
+            QLPageView *pageView = [self.dataSource coverFlowPagesView:self viewForPageAtIndexPath:indexPath];
             pageView.frame = pageFrame;
             if (i < _currentIndex)
                 [self makeLeftPerspectiveTransform:pageView];
@@ -180,15 +182,15 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     // finding left view & right view & current view
     CGPoint rightViewCenter = CGPointZero, leftViewCenter = CGPointZero, currentViewCenter = CGPointZero;
     if (rightView == nil && _currentIndex < numberOfPages - 1) {
-        CGRect rightViewFrame = [self frameOfPageViewAtIndexPath:[NSIndexPath indexPathForItem:_currentIndex + 1 inSection:0]];
+        CGRect rightViewFrame = [self frameOfPageViewAtIndexPath:[NSIndexPath indexPathForRow:_currentIndex + 1 inSection:0]];
         rightViewCenter = CGPointMake(CGRectGetMidX(rightViewFrame), CGRectGetMidY(rightViewFrame));
     }
     if (leftview == nil && _currentIndex > 0) {
-        CGRect leftViewFrame = [self frameOfPageViewAtIndexPath:[NSIndexPath indexPathForItem:_currentIndex - 1 inSection:0]];
+        CGRect leftViewFrame = [self frameOfPageViewAtIndexPath:[NSIndexPath indexPathForRow:_currentIndex - 1 inSection:0]];
         leftViewCenter = CGPointMake(CGRectGetMidX(leftViewFrame), CGRectGetMidY(leftViewFrame));
     }
     if (currentView == nil) {
-        CGRect currentViewFrame = [self frameOfPageViewAtIndexPath:[NSIndexPath indexPathForItem:_currentIndex inSection:0]];
+        CGRect currentViewFrame = [self frameOfPageViewAtIndexPath:[NSIndexPath indexPathForRow:_currentIndex inSection:0]];
         currentViewCenter = CGPointMake(CGRectGetMidX(currentViewFrame), CGRectGetMidY(currentViewFrame));
     }
     for (QLPageView *view in _containerView.subviews) {
@@ -245,7 +247,7 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
 {
     NSInteger numberOfPages = 0;
     if (self.dataSource)
-        numberOfPages = [self.dataSource pageCoverFlowView:self numberOfPagesInSection:0];
+        numberOfPages = [self.dataSource coverFlowPagesView:self numberOfPagesInSection:0];
     _pageControl.numberOfPages = numberOfPages;
     _pageControl.currentPage = _currentIndex;
 }
@@ -299,7 +301,7 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     NSInteger numberOfPages = 0;
     NSInteger pageIndex = floorf((currentOffset.x - _pageWidth / 2) / _pageWidth) + 1;
     if (self.dataSource)
-        numberOfPages = [self.dataSource pageCoverFlowView:self numberOfPagesInSection:0];
+        numberOfPages = [self.dataSource coverFlowPagesView:self numberOfPagesInSection:0];
     if (pageIndex != _currentIndex) {
         if (pageIndex >= 0 && pageIndex < numberOfPages) {
             _currentIndex = pageIndex;

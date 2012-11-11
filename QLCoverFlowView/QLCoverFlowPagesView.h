@@ -23,10 +23,10 @@
 
 @required
 
-- (NSInteger)pageCoverFlowView:(QLCoverFlowPagesView *)pageCoverFlowView numberOfPagesInSection:(NSInteger)section;
-- (UIView *)pageCoverFlowView:(QLCoverFlowPagesView *)pageCoverFlowView viewForPageAtIndexPath:(NSIndexPath *)indexPath;
+- (NSInteger)coverFlowPagesView:(QLCoverFlowPagesView *)coverFlowPagesView numberOfPagesInSection:(NSInteger)section;
+- (QLPageView *)coverFlowPagesView:(QLCoverFlowPagesView *)coverFlowPageView viewForPageAtIndexPath:(NSIndexPath *)indexPath;
 @optional
-- (NSInteger)numberOfSectionsInPageView:(QLCoverFlowPagesView *)pageCoverFlowView;              // Default is 1 if not implemented
+- (NSInteger)numberOfSectionsInPageView:(QLCoverFlowPagesView *)coverFlowPagesView;              // Default is 1 if not implemented
 
 @end
 

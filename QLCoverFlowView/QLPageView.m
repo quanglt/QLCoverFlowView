@@ -37,6 +37,8 @@
         [self addSubview:_imageView];
     }
     _imageView.image = _image;
+    if (self.enableReflection)
+        [self setupReflection];
 }
 
 /*
