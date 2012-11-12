@@ -37,6 +37,7 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     float _pageWidth;
     float _pageHeight;
     NSInteger _currentIndex;
+    QLPageView *_currentPageView;
     UIView *_containerView;
     NSMutableDictionary *_reusableViewStorages;
     CGPoint _beginContentOffset;
@@ -55,7 +56,7 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     self.scrollView.delegate = self;
     self.scrollView.showsHorizontalScrollIndicator = NO;
     self.scrollView.showsVerticalScrollIndicator = NO;
-    
+    self.scrollView.decelerationRate = UIScrollViewDecelerationRateNormal;
     _containerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.scrollView.contentSize.width, self.scrollView.contentSize.height)];
     _containerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [self.scrollView addSubview:_containerView];
@@ -154,9 +155,9 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     if (self.dataSource)
         numberOfPages = [self.dataSource coverFlowPagesView:self numberOfPagesInSection:0];
     
-    UIView *currentView = nil;
-    UIView *leftview = nil;
-    UIView *rightView = nil;
+    QLPageView *currentView = nil;
+    QLPageView *leftview = nil;
+    QLPageView *rightView = nil;
     
     for (int i = 0; i < numberOfPages; i++) {
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
@@ -202,22 +203,25 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
             currentView = view;
         }
     }
-//    [self.scrollView layoutIfNeeded];
     // animate to show the current view
-    [_containerView bringSubviewToFront:currentView];
-    [UIView animateWithDuration:0.5 animations:^{
+    if (currentView != _currentPageView) {
+        _currentPageView = currentView;
+        [_containerView bringSubviewToFront:currentView];
+        [UIView animateWithDuration:0.5 animations:^{
+            NSLog(@"animate current view");
+            if (leftview && CATransform3DIsIdentity(leftview.layer.transform)) {
+                [self makeLeftPerspectiveTransform:leftview];
+            }
+            if (rightView && CATransform3DIsIdentity(rightView.layer.transform)) {
+                [self makeRightPerspectiveTransform:rightView];
+            }
+            [self resetTransform:currentView];
+            
+        } completion:^(BOOL finished) {
+            
+        }];
         
-        if (leftview && CATransform3DIsIdentity(leftview.layer.transform)) {
-            [self makeLeftPerspectiveTransform:leftview];
-        }
-        if (rightView && CATransform3DIsIdentity(rightView.layer.transform)) {
-            [self makeRightPerspectiveTransform:rightView];
-        }
-        [self resetTransform:currentView];
-        
-    } completion:^(BOOL finished) {
-        
-    }];
+    }
     
 }
 
