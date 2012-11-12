@@ -10,6 +10,6 @@ It uses enqueue/dequeue mechanism, datasource, delegate which are inspired by UI
 * CoreGraphics
 
 # Screenshots
-![iPad landscapse](https://github.com/quanglt/QLCoverFlowView/blob/master/Screenshots/QLCoverFlowView-1.png)
+* ![](https://github.com/quanglt/QLCoverFlowView/blob/master/Screenshots/QLCoverFlowView-1.png)
 
-[Youtube](http://www.youtube.com/watch?v=roGBGRwfndc)
+* Youtube: http://www.youtube.com/watch?v=roGBGRwfndc
