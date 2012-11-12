@@ -18,15 +18,15 @@
 {
     _reflectionView = [[UIImageView alloc] initWithFrame:CGRectZero];
     _reflectionView.alpha = kQLPageViewReflectionAlpha;
-    _reflectionHeight = 60.;
-    _reflectionOffset = 2.;
+    _reflectionHeight = kQLPageViewReflectionHeight;
+    _reflectionOffset = kQLPageViewReflectionOffset;
     [self addSubview:_reflectionView];
 }
 
 - (id)initWithReuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithFrame:CGRectZero];
     if (self) {
-        _reuseIdentifier = reuseIdentifier;
+        _reuseIdentifier = [reuseIdentifier copy];
         [self setup];
     }
     return self;
@@ -38,7 +38,7 @@
 
 - (void)layoutSubviews {
     [super layoutSubviews];
-    if (self.enableReflection) {
+    if (_enableReflection) {
         CGRect reflectionFrame = self.bounds;
         reflectionFrame.origin.y += reflectionFrame.size.height + _reflectionOffset;
         reflectionFrame.size.height = _reflectionHeight;
@@ -48,21 +48,24 @@
     
 }
 
-- (void)setImage:(UIImage *)image {
-    _image = image;
+- (void)setImage:(UIImage *)image reflected:(BOOL)reflected {
     if (!_imageView) {
         _imageView = [[UIImageView alloc] initWithFrame:self.bounds];
         _imageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         [self addSubview:_imageView];
     }
-    _imageView.image = _image;
-    if (self.enableReflection)
+    _imageView.image = image;
+    _enableReflection = reflected;
+    if (_enableReflection) {
         [self updateReflection];
+    } else {
+        _reflectionView.hidden = YES;
+    }
 }
 
 #pragma mark - reflection section
 /*
- create reflecting animation. Referring the document: http://aptogo.co.uk/2011/08/no-fuss-reflections/
+ create reflected animation. Referring the document: http://aptogo.co.uk/2011/08/no-fuss-reflections/
  */
 - (void)updateReflection
 {
@@ -162,13 +165,6 @@ CGImageRef CreateGradientImage(int pixelsWide, int pixelsHigh)
     
     // Return the CGImageRef containing the gradient (with refcount = 1)
     return theCGImage;
-}
-
-- (void)setEnableReflection:(BOOL)enableReflection {
-    _enableReflection = enableReflection;
-    if (_enableReflection)
-        [self updateReflection];
-    [self layoutIfNeeded];
 }
 
 @end

@@ -208,7 +208,6 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
         _currentPageView = currentView;
         [_containerView bringSubviewToFront:currentView];
         [UIView animateWithDuration:0.5 animations:^{
-                    NSLog(@"animate sub view");
             if (leftview && CATransform3DIsIdentity(leftview.layer.transform)) {
                 [self makeLeftPerspectiveTransform:leftview];
             }

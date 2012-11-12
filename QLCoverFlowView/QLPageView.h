@@ -14,13 +14,14 @@
     UIImageView *_reflectionView;
     CGFloat _reflectionHeight;
     CGFloat _reflectionOffset;
+    BOOL _enableReflection;
 }
 
 // init with reuse identifier. the size will be specified by the parent view at display time
 - (id)initWithReuseIdentifier:(NSString *)reuseIdentifier;
 
 @property (nonatomic, readonly, copy) NSString *reuseIdentifier;
-@property (nonatomic, strong) UIImage *image;
-@property (nonatomic, assign) BOOL enableReflection;
+
+- (void)setImage:(UIImage *)image reflected:(BOOL)reflected;
 
 @end

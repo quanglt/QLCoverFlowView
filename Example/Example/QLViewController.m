@@ -20,7 +20,6 @@
     self.coverFlowView.dataSource = self;
     self.coverFlowView.showPageControl = YES;
     self.coverFlowView.scrollView.backgroundColor = [UIColor blackColor];
-	// Do any additional setup after loading the view, typically from a nib.
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
@@ -42,18 +41,15 @@
     if (indexPath.row == 3) {
         NSArray *nibViews = [[NSBundle mainBundle] loadNibNamed:@"CommentPageView" owner:self options:nil];
         QLPageView *view = [nibViews objectAtIndex:0];
-        view.clipsToBounds = NO;
-        view.enableReflection = YES;
         
         return view;
     }
     QLPageView *view = [coverFlowPageView dequeueReusablePageViewWithIdentifier:pageViewId];
     if (view == nil) {
         view = [[QLPageView alloc] initWithReuseIdentifier:pageViewId];
-        view.enableReflection = YES;
     }
-    view.image = [UIImage imageNamed:[NSString stringWithFormat:@"image-%d.png", indexPath.row]];
-//    view.backgroundColor = [UIColor grayColor];
+    UIImage *image = [UIImage imageNamed:[NSString stringWithFormat:@"image-%d.png", indexPath.row]];
+    [view setImage:image reflected:YES];
     return view;
 }
 
