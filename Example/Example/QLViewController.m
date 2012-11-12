@@ -38,11 +38,12 @@
     return 10;
 }
 - (UIView *)coverFlowPagesView:(QLCoverFlowPagesView *)coverFlowPageView viewForPageAtIndexPath:(NSIndexPath *)indexPath {
-    static NSString *commentViewId = @"commentViewID";
     static NSString *pageViewId = @"imagePageViewID";
     if (indexPath.row == 3) {
         NSArray *nibViews = [[NSBundle mainBundle] loadNibNamed:@"CommentPageView" owner:self options:nil];
         QLPageView *view = [nibViews objectAtIndex:0];
+        view.clipsToBounds = NO;
+        view.enableReflection = YES;
         
         return view;
     }
@@ -52,6 +53,7 @@
         view.enableReflection = YES;
     }
     view.image = [UIImage imageNamed:[NSString stringWithFormat:@"image-%d.png", indexPath.row]];
+//    view.backgroundColor = [UIColor grayColor];
     return view;
 }
 

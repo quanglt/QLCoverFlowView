@@ -10,7 +10,7 @@
 #import <QuartzCore/QuartzCore.h>
 
 /*
- Follow this newpaper: http://b2cloud.com.au/how-to-guides/ios-perspective-transform
+ Follow this newspaper: http://b2cloud.com.au/how-to-guides/ios-perspective-transform
  To make perspective transform, value of m24, m34 need to be reduced.
  
  */
@@ -208,7 +208,7 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
         _currentPageView = currentView;
         [_containerView bringSubviewToFront:currentView];
         [UIView animateWithDuration:0.5 animations:^{
-            NSLog(@"animate current view");
+                    NSLog(@"animate sub view");
             if (leftview && CATransform3DIsIdentity(leftview.layer.transform)) {
                 [self makeLeftPerspectiveTransform:leftview];
             }

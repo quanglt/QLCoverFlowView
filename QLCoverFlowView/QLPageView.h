@@ -10,9 +10,10 @@
 #import <QuartzCore/QuartzCore.h>
 
 @interface QLPageView : UIView {
-    CAGradientLayer *_gradientLayer;
     UIImageView *_imageView;
     UIImageView *_reflectionView;
+    CGFloat _reflectionHeight;
+    CGFloat _reflectionOffset;
 }
 
 // init with reuse identifier. the size will be specified by the parent view at display time
