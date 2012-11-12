@@ -12,4 +12,4 @@ It uses enqueue/dequeue mechanism, datasource, delegate which are inspired by UI
 # Screenshots
 ![](https://github.com/quanglt/QLCoverFlowView/raw/master/Screenshots/QLCoverFlowView-1.png)
 
-* Youtube: http://www.youtube.com/watch?v=roGBGRwfndc
+* Youtube: http://www.youtube.com/watch?v=BNqeC_uOyaQ
