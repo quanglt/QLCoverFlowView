@@ -86,7 +86,8 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     [super layoutSubviews];
     if (self.showPageControl)
         _pageControl.frame = CGRectMake(0, self.bounds.size.height - 20., self.bounds.size.width, 20.);
-    [self reloadData];
+    
+    [self reloadPagesView];
 }
 
 - (void)calculateContentSize;
@@ -119,6 +120,33 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
 {
     CGRect pageFrame = [self convertRect:pageView.frame fromView:_containerView];
     return CGRectIntersectsRect(pageFrame, self.scrollView.frame);
+}
+
+- (void)reloadData {
+    _currentIndex = 0;
+    _currentPageView = nil;
+    [self reloadPagesView];
+}
+
+- (void)reloadPagesView {
+    // remove page views
+    for (QLPageView *view in [_containerView subviews]) {
+        [view removeFromSuperview];
+    }
+    [_reusableViewStorages removeAllObjects];
+    [self calculateContentSize];
+    [self.scrollView setContentOffset:CGPointMake(_currentIndex * _pageWidth, 0)];
+    [self loadPageViews];
+    if (self.showPageControl)
+        [self setupPageControl];
+    
+}
+
+- (id)dequeueReusablePageViewWithIdentifier:(NSString *)identifier {
+    id lastObject = [[_reusableViewStorages objectForKey:identifier] lastObject];
+    if (lastObject)
+        [[_reusableViewStorages objectForKey:identifier] removeLastObject];
+    return lastObject;
 }
 
 - (void)enQueuePageViews;
@@ -275,24 +303,6 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     view.layer.transform = CATransform3DIdentity;
 }
 
-- (void)reloadData {
-    // remove page views
-    for (QLPageView *view in [_containerView subviews]) {
-        [view removeFromSuperview];
-    }
-    [_reusableViewStorages removeAllObjects];
-    [self calculateContentSize];
-    [self loadPageViews];
-    if (self.showPageControl)
-        [self setupPageControl];
-}
-
-- (id)dequeueReusablePageViewWithIdentifier:(NSString *)identifier {
-    id lastObject = [[_reusableViewStorages objectForKey:identifier] lastObject];
-    if (lastObject)
-        [[_reusableViewStorages objectForKey:identifier] removeLastObject];
-    return lastObject;
-}
 
 #pragma mark - UIScrollView delegate
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
