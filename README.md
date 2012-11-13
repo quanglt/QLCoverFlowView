@@ -5,6 +5,7 @@ QLCoverFlowView is a scrollable view to display number of page views with cover 
 It uses enqueue/dequeue mechanism, datasource, delegate which are inspired by UITableView. 
 
 # Requirements
+* Xcode 4.5 or later
 * iOS 5 or later
 * QuartCore 
 * CoreGraphics
