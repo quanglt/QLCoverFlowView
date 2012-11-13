@@ -37,10 +37,8 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     float _pageWidth;
     float _pageHeight;
     NSInteger _currentIndex;
-    QLPageView *_currentPageView;
     UIView *_containerView;
     NSMutableDictionary *_reusableViewStorages;
-    CGPoint _beginContentOffset;
     UIPageControl *_pageControl;
 }
 
@@ -124,7 +122,6 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
 
 - (void)reloadData {
     _currentIndex = 0;
-    _currentPageView = nil;
     [self reloadPagesView];
 }
 
@@ -136,7 +133,7 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     [_reusableViewStorages removeAllObjects];
     [self calculateContentSize];
     [self.scrollView setContentOffset:CGPointMake(_currentIndex * _pageWidth, 0)];
-    [self loadPageViews];
+    [self loadPageViewsWithAnimate:NO];
     if (self.showPageControl)
         [self setupPageControl];
     
@@ -168,8 +165,9 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     }
 }
 
-- (void)loadPageViews;
+- (void)loadPageViewsWithAnimate:(BOOL)animate;
 {
+    [self enQueuePageViews];
     NSMutableSet *usedIndexPaths = [NSMutableSet set];
     NSArray *pageViews = [_containerView subviews];
     for (QLPageView *pageView in pageViews) {
@@ -182,11 +180,7 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
     NSInteger numberOfPages = 0;
     if (self.dataSource)
         numberOfPages = [self.dataSource coverFlowPagesView:self numberOfPagesInSection:0];
-    
-    QLPageView *currentView = nil;
-    QLPageView *leftview = nil;
-    QLPageView *rightView = nil;
-    
+        
     for (int i = 0; i < numberOfPages; i++) {
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
         if ([usedIndexPaths containsObject:indexPath])
@@ -195,61 +189,43 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
         if (CGRectIntersectsRect([self convertRect:pageFrame fromView:_containerView], self.scrollView.frame)) {
             QLPageView *pageView = [self.dataSource coverFlowPagesView:self viewForPageAtIndexPath:indexPath];
             pageView.frame = pageFrame;
-            if (i < _currentIndex)
-                [self makeLeftPerspectiveTransform:pageView];
-            if (i > _currentIndex)
-                [self makeRightPerspectiveTransform:pageView];
             [_containerView addSubview:pageView];
-            if (i == _currentIndex)
-                currentView = pageView;
-            else if (i == _currentIndex - 1)
-                leftview = pageView;
-            else if (i == _currentIndex + 1)
-                rightView = pageView;
+            if (i == _currentIndex) {
+                [self bringSubviewToFront:pageView];
+                [self resetTransform:pageView];
+            }
         }
     }
-    // finding left view & right view & current view
-    CGPoint rightViewCenter = CGPointZero, leftViewCenter = CGPointZero, currentViewCenter = CGPointZero;
-    if (rightView == nil && _currentIndex < numberOfPages - 1) {
-        CGRect rightViewFrame = [self frameOfPageViewAtIndexPath:[NSIndexPath indexPathForRow:_currentIndex + 1 inSection:0]];
-        rightViewCenter = CGPointMake(CGRectGetMidX(rightViewFrame), CGRectGetMidY(rightViewFrame));
-    }
-    if (leftview == nil && _currentIndex > 0) {
-        CGRect leftViewFrame = [self frameOfPageViewAtIndexPath:[NSIndexPath indexPathForRow:_currentIndex - 1 inSection:0]];
-        leftViewCenter = CGPointMake(CGRectGetMidX(leftViewFrame), CGRectGetMidY(leftViewFrame));
-    }
-    if (currentView == nil) {
-        CGRect currentViewFrame = [self frameOfPageViewAtIndexPath:[NSIndexPath indexPathForRow:_currentIndex inSection:0]];
-        currentViewCenter = CGPointMake(CGRectGetMidX(currentViewFrame), CGRectGetMidY(currentViewFrame));
-    }
-    for (QLPageView *view in _containerView.subviews) {
-        if (CGPointEqualToPoint(rightViewCenter, view.center)) {
-            rightView = view;
-        } else if (CGPointEqualToPoint(leftViewCenter, view.center)) {
-            leftview = view;
-        } else if (CGPointEqualToPoint(currentViewCenter, view.center)) {
-            currentView = view;
-        }
-    }
-    // animate to show the current view
-    if (currentView != _currentPageView) {
-        _currentPageView = currentView;
-        [_containerView bringSubviewToFront:currentView];
+    
+    if (animate) {
         [UIView animateWithDuration:0.5 animations:^{
-            if (leftview && CATransform3DIsIdentity(leftview.layer.transform)) {
-                [self makeLeftPerspectiveTransform:leftview];
+            for (QLPageView *pageView in _containerView.subviews) {
+                int pageIndex = [self indexPathOfFrame:pageView.frame].row;
+                if (pageIndex < _currentIndex)
+                    [self makeLeftPerspectiveTransform:pageView];
+                if (pageIndex > _currentIndex)
+                    [self makeRightPerspectiveTransform:pageView];
+                if (pageIndex == _currentIndex)
+                    [self resetTransform:pageView];
             }
-            if (rightView && CATransform3DIsIdentity(rightView.layer.transform)) {
-                [self makeRightPerspectiveTransform:rightView];
-            }
-            [self resetTransform:currentView];
             
         } completion:^(BOOL finished) {
             
         }];
+
+    } else {
+        for (QLPageView *pageView in _containerView.subviews) {
+            int pageIndex = [self indexPathOfFrame:pageView.frame].row;
+            
+            if (pageIndex < _currentIndex)
+                [self makeLeftPerspectiveTransform:pageView];
+            if (pageIndex > _currentIndex)
+                [self makeRightPerspectiveTransform:pageView];
+            if (pageIndex == _currentIndex)
+                [self resetTransform:pageView];
+        }
         
     }
-    
 }
 
 #pragma mark - page control management
@@ -305,29 +281,30 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
 
 
 #pragma mark - UIScrollView delegate
-- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
-    _beginContentOffset = scrollView.contentOffset;
-}
-
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    CGPoint currentOffset = scrollView.contentOffset;
-    NSInteger numberOfPages = 0;
-    NSInteger pageIndex = floorf((currentOffset.x - _pageWidth / 2) / _pageWidth) + 1;
-    if (self.dataSource)
-        numberOfPages = [self.dataSource coverFlowPagesView:self numberOfPagesInSection:0];
-    if (pageIndex != _currentIndex) {
-        if (pageIndex >= 0 && pageIndex < numberOfPages) {
-            _currentIndex = pageIndex;
+    if (!scrollView.decelerating && !scrollView.dragging) {
+        int nextIndex = floorf((self.scrollView.contentOffset.x - _pageWidth / 2) / _pageWidth) + 1;
+        if (nextIndex != _currentIndex) {
+            _currentIndex = nextIndex;
             _pageControl.currentPage = _currentIndex;
+            [self loadPageViewsWithAnimate:YES];
+            return;
         }
-        
     }
-    [self enQueuePageViews];
-    [self loadPageViews];
+    [self loadPageViewsWithAnimate:NO];
 }
 
 - (void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset {
-    targetContentOffset->x = _currentIndex * _pageWidth;
+    int nextIndex = floorf((targetContentOffset->x - _pageWidth / 2) / _pageWidth) + 1;
+    targetContentOffset->x = nextIndex * _pageWidth;
+    if (nextIndex != _currentIndex) {
+        // estimate the animation based on the distance of browsing
+        BOOL animate = ABS(_currentIndex - nextIndex) < 4;
+        _currentIndex = nextIndex;
+        _pageControl.currentPage = _currentIndex;
+        
+        [self loadPageViewsWithAnimate:animate];
+    }
 }
 
 
